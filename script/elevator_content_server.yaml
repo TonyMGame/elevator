@@ -1,0 +1,82 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: elevator_content_server
+  namespace: platform-dev
+
+spec:
+  externalTrafficPolicy: Cluster
+  ports:
+    - port: 8090
+      protocol: TCP
+      targetPort: 8090
+  selector:
+    app: elevator_content_server
+  sessionAffinity: None
+  type: NodePort
+status:
+  loadBalancer: {}
+
+---
+
+
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: elevator_content_server
+  namespace: platform-dev
+  labels:
+    app: elevator_content_server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: elevator_content_server
+  template:
+    metadata:
+      name: elevator_content_server
+      labels:
+        app: elevator_content_server
+    spec:
+      containers:
+        - name: elevator_content_server
+          image: docker.soundai.me/babel/elevator_content_server:0.0.1-rc2
+          ports:
+            - containerPort: 8090
+          resources: {}
+          imagePullPolicy: Always
+          env:
+            - name: SERVICENAME
+              valueFrom:
+                configMapKeyRef:
+                  name: elevator_content_server-config-map
+                  key: SERVICENAME
+          volumeMounts:
+            - name: data-volume
+              mountPath: /babel/logs
+              subPath: logs
+            - name: config-volume
+              mountPath: /opt/sai/elevator_content_server/config/application.properties
+              subPath: application.properties
+      volumes:
+        - name: logs-volume
+          persistentVolumeClaim:
+            claimName: babel-platform-dev-pvc
+        - name: config-volume
+          configMap:
+            name: elevator_content_server-config-map
+            items:
+              - key: application.properties
+                path: application.properties
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      imagePullSecrets:
+        - name: platform-image-key
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600

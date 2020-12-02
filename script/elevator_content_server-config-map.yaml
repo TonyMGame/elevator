@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: elevator_content_server-config-map
+  namespace: platform-dev
+data:
+  application.properties: |
+    spring.datasource.url=jdbc:mysql://rm-2ze0a77phjgk85878mo.mysql.rds.aliyuncs.com:3306/webadmin?serverTimezone=UTC&useUnicode=true&useSSL=false&characterEncoding=utf8
+    spring.datasource.username=webadmin_rw
+    spring.datasource.password=d27Pk5NsvA
+    token.base-url=http://oauth-server:16080/sso/token
+    token.user-info-url=http://oauth-server:16080/sso/user
+    massage.push-url=http://api-fat-inner-azero.soundai.cn/v1/push
+    material.upload-url=https://cms-dev-azero.soundai.cn:8443/v1/cmsservice/resource/upload
+    material.token=eyJlbmMiOiJBMTI4R0NNIiwiYWxnIjoiZGlyIn0..loGacnZSnv44gjGg.z8tKKmecVZ7g6KGYIQo4_RiaLOiIPvEW5t1_usTaT6xvfAXxuFChCnJ_yQLgaSAEJVJbjqBDU0-Bb1O3hFyWH5V7F6B0-RNOhOz5LKkt1Jn1sgsjYuOWt5EZm_FdYGJ_laHWdOzEIRmIHMzb9d3PZYC75vbBQO1TqeJJHjbLfwBPpZtNXXBiDA4ZpIAvafG2dAVaIskhBwAZ0iuphLarmcg.nK8UnWyrSvVncdt2OfAt2w
+    massage.namespace=TemplateRuntime
+
+  SERVICENAME: elevator_content_server

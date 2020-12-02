@@ -13,6 +13,30 @@ public enum ResultEnum implements CommonResult{
     NO_TOKEN(8001,"没有token。"),
 
     NO_LOGIN(8002,"请登陆。"),
+
+    UPLOAD_ERROR(8003,"上传通讯出错。"),
+
+    INSERT_DATA_ERROR(8004,"插入数据出错。"),
+
+    QUERY_DATA_ERROR(8005,"查询数据出错。"),
+
+    DIND_DEVICE_ERROR(8006,"绑定设备sn出错。"),
+
+    REQUEST_ERROR(8007,"调用服务器出错。"),
+
+    TYPE_ERROR(8008,"文件类型不正确。"),
+
+    ADD_TIME_ERROR(8009,"所选时间与已存在的任务时间冲突。"),
+
+    GET_USER_ID(8009,"获取urrogate userId失败"),
+
+    ADD_DEVICE_SN_ERROR(8010,"设备sn码重复添加。"),
+
+    DEL_POWER_ERROR(8011,"权限不足，无法删除。"),
+
+    POWER_ERROR(8012,"权限不足,无法操作。"),
+
+    UPLOAD_ALREADY_ERROR(8013,"该图片已存在,无法上传。"),
     ;
 
     private Integer code;

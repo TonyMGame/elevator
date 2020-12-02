@@ -1,143 +1,104 @@
 package com.soundai.elevator.cms.service.impl;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
+import com.github.pagehelper.Page;
+import com.github.pagehelper.PageHelper;
 import com.soundai.elevator.cms.common.BusinessException;
-import com.soundai.elevator.cms.common.ProException;
-import com.soundai.elevator.cms.mapper.UserMapper;
+import com.soundai.elevator.cms.common.ResultEnum;
 import com.soundai.elevator.cms.entity.User;
+import com.soundai.elevator.cms.mapper.UserMapper;
 import com.soundai.elevator.cms.service.UserService;
 import com.soundai.elevator.cms.task.CachePool;
-import com.soundai.elevator.cms.task.LocalCache;
-import com.soundai.elevator.cms.util.SSLSocketClient;
-import com.soundai.elevator.cms.vo.AccessToken;
-import okhttp3.*;
+import com.soundai.elevator.cms.task.ThreadRepertory;
+import com.soundai.elevator.cms.vo.ChangeValueVo;
+import com.soundai.elevator.cms.vo.PageList;
+import com.soundai.elevator.cms.vo.UserPageVo;
+import lombok.extern.log4j.Log4j2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import javax.annotation.Resource;
-import java.io.IOException;
-import java.util.Map;
 
-/**
- * @author 常磊
- * @date 4.16
- * @describe  根据code换取token；
- */
+import javax.annotation.Resource;
+import java.util.List;
+
+@Log4j2
 @Service
 public class UserServiceImpl implements UserService {
 
-    private final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
-
     @Resource
-    private UserMapper userdao;
-
-    private final OkHttpClient okHttpClient;
-
-    @Value("${token.base-url}")
-    private String baseUrl;
-    @Value("${token.client-id}")
-    private String client_id;
-    @Value("${token.logout-url}")
-    private String logout_url;
-    @Value("${token.user-info-url}")
-    private String userInfoUrl;
-
-    public UserServiceImpl() {
-        this.okHttpClient = new OkHttpClient()
-                .newBuilder()
-                .sslSocketFactory(SSLSocketClient.getSSLSocketFactory())// 配置
-                .hostnameVerifier(SSLSocketClient.getHostnameVerifier())//配置
-                .build();
-    }
+    private UserMapper userMapper;
 
     /**
-     * 常磊 4.17
-     * 获取token并异步步处理新用户
-     * @param code
+     * 用户列表
+     *
+     * @param userVo
      * @return
+     * @throws BusinessException
      */
     @Override
-    public AccessToken getAccessToken(String code) throws BusinessException {
-            String url = baseUrl+"?client_id="+client_id+"&code="+code+"&logout_url="+logout_url;
-            String tokenMsg = this.getResqust(url);
-            JSONObject tokenMsgJson = JSON.parseObject(tokenMsg);
-            String accessToken = tokenMsgJson.getString("accessToken");
-            if(accessToken==null){
-                throw  new ProException(Integer.valueOf(tokenMsgJson.getString("status")),tokenMsgJson.getString("message"));
-            }
-            User user = getUserMessage(accessToken);
-            cacheToken(user,tokenMsgJson);
-            AccessToken accessTokenBody = new AccessToken();
-            accessTokenBody.setAccessToken(accessToken);
-            return accessTokenBody;
-    }
-
-    public void cacheToken(User user,JSONObject tokenMsgJson){
+    public PageList getUserList(UserPageVo userVo) throws BusinessException {
         try {
-            String accessToken = tokenMsgJson.getString("accessToken");
-            Long expireIn =  Long.valueOf(tokenMsgJson.getString("expireIn"));
-            CachePool.getInstance().putCacheItem(accessToken,user,expireIn*1000);
-            log.info("cacheToken {}",CachePool.getInstance().getCacheItem(accessToken));
-        }catch (Exception e){
+            User user = (User) CachePool.getInstance().getCacheItem(ThreadRepertory.getParm().getToken());
+            Page page = PageHelper.startPage(userVo.getPageNum(), userVo.getPageSize());
+            if (user.getLevel() != 2) {
+                userVo.setUserId(user.getId());
+            }
+            List<User> materialList = this.userMapper.getUserList(userVo);
+            return new PageList(userVo.getPageNum(),
+                    userVo.getPageSize(),
+                    page.getTotal(), page.getPages(),
+                    materialList);
+        } catch (Exception e) {
             e.printStackTrace();
-            throw new ProException(998,"缓存失败请重试");
+            throw new BusinessException(ResultEnum.QUERY_DATA_ERROR);
         }
+
     }
 
     /**
-     * 常磊 4.17
-     * 请求注册中心
-     * @param url
-     * @return
+     * 删除用户
+     *
+     * @param id
+     * @throws BusinessException
      */
-    public  String  getResqust(String url){
-        try {
-            RequestBody body = new FormBody.Builder().build();
-            Request request = new Request.Builder()
-                .url(url)
-                .post(body)
-                .build();
-            Response response = okHttpClient.newCall(request).execute();
-            String res = response.body().string();
-            log.info(res);
-            return  res;
-        } catch (IOException e) {
-            e.printStackTrace();
+    @Override
+    public void delUser(int id) throws BusinessException {
+        User user = (User) CachePool.getInstance().getCacheItem(ThreadRepertory.getParm().getToken());
+        if (user.getLevel() != 2) {
+            throw new BusinessException(ResultEnum.DEL_POWER_ERROR);
         }
-        return null;
+        if (id == user.getId()) {
+            throw new BusinessException(ResultEnum.DEL_POWER_ERROR);
+        }
+        CachePool.getInstance().removeById(id);
+        this.userMapper.delUser(id);
     }
 
     /**
-     * 常磊 4.17
-     * 获取用户信息并验证新用户
-     * @param accessToken
+     * 更改用户level级别  控制sms操作权限
+     *
+     * @param changeValueVo
+     * @throws BusinessException
      */
-    public User getUserMessage(String accessToken){
-        User user;
-        try {
-            String userMsgUrl = userInfoUrl+"?client_id="+client_id+"&access_token="+accessToken;
-            String userInfo =getResqust(userMsgUrl);
-            user  =this.userdao.getUserByAccountIAandNumber(JSON.parseObject(userInfo, Map.class));
-            log.info("getUserMessage user{}",user);
-            if(user==null){
-                user = new User();
-                JSONObject userInfoJson = JSON.parseObject(userInfo);
-                String accountId = userInfoJson.getString("accountId");
-                String number = userInfoJson.getString("number");
-                user.setAccountId(accountId);
-                user.setIsDel(0);
-                user.setLevel(0);
-                user.setNumber(number);
-                this.userdao.insertUser(user);
-            }
-        }catch (Exception e){
-            e.printStackTrace();
-            throw new ProException(997,"getUserMessage err");
+    @Override
+    public void upLevel(ChangeValueVo changeValueVo) throws BusinessException {
+        User user = (User) CachePool.getInstance().getCacheItem(ThreadRepertory.getParm().getToken());
+        if (user.getLevel() != 2) {
+            throw new BusinessException(ResultEnum.POWER_ERROR);
         }
-        log.info("getUserMessage userRes{}",user.toString());
-        return user;
+        if (changeValueVo.getId() ==user.getId()) {
+            throw new BusinessException(ResultEnum.POWER_ERROR);
+        }
+        CachePool.getInstance().changeLevelById(changeValueVo.getId(), Integer.parseInt(String.valueOf(changeValueVo.getItem())));
+        this.userMapper.upLevel(changeValueVo);
     }
 
+    @Override
+    public void updateCompanyName(ChangeValueVo changeValueVo) throws BusinessException {
+        this.userMapper.updateCompanyName(changeValueVo);
+    }
+
+    @Override
+    public void updateName(ChangeValueVo changeValueVo) throws BusinessException {
+        this.userMapper.updateName(changeValueVo);
+    }
 }

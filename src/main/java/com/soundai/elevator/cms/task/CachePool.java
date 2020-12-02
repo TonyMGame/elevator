@@ -1,15 +1,14 @@
 package com.soundai.elevator.cms.task;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import com.soundai.elevator.cms.entity.User;
+import lombok.extern.log4j.Log4j2;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+@Log4j2
 public class CachePool {
 
-    private final Logger log = LoggerFactory.getLogger(CachePool.class);
     // 缓存池唯一实例
     private static CachePool instance;
 
@@ -92,7 +91,6 @@ public class CachePool {
         if (!cacheItems.containsKey(name)) {
             return;
         }
-
         cacheItems.remove(name);
     }
 
@@ -104,6 +102,34 @@ public class CachePool {
     public int getSize() {
         log.info("缓存池：{}", cacheItems);
         return cacheItems.size();
+    }
+
+    /**
+     * 删除掉缓存
+     *
+     * @return
+     */
+    public synchronized void removeById(Integer id){
+        for (String key : cacheItems.keySet()) {
+            User user = (User) CachePool.getInstance().getCacheItem(key);
+            if(user.getId()==id){
+                cacheItems.remove(key);
+            }
+        }
+    }
+
+    /**
+     * 更新缓存level
+     *
+     * @return
+     */
+    public synchronized void changeLevelById(Integer id,Integer level){
+        for (String key : cacheItems.keySet()) {
+            User user = (User) CachePool.getInstance().getCacheItem(key);
+            if(user.getId()==id){
+                user.setLevel(level);
+            }
+        }
     }
 
 }

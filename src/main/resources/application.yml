@@ -6,45 +6,62 @@ server:
 spring:
   datasource:
     #数据源基本配置
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://127.0.0.1:3306/test?serverTimezone=UTC&useUnicode=true&useSSL=false&characterEncoding=utf8
-    username: root
-    password: root
+    driverClassName: com.mysql.cj.jdbc.Driver
+    #公网
+    url: jdbc:mysql://rm-2ze0a77phjgk85878mo.mysql.rds.aliyuncs.com:3306/elevatoradmin?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&failOverReadOnly=false
+    #服务器内
+    #url: jdbc:mysql://rm-2ze0a77phjgk85878.mysql.rds.aliyuncs.com:3306/elevatoradmin?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&failOverReadOnly=false
+    username: webadmin_rw
+    password: d27Pk5NsvA
     type: com.alibaba.druid.pool.DruidDataSource
-    #数据源其他配置
     initialSize: 5
     minIdle: 5
     maxActive: 20
-    maxWait: 60000
-    timeBetweenEvictionRunsMillis: 60000
-    minEvictableIdleTimeMillis: 300000
+    maxWait: 100     # 配置获取连接等待超时的时间
+    timeBetweenEvictionRunsMillis: 60000   # 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒
+    minEvictableIdleTimeMillis:  300000 # 配置一个连接在池中最小生存的时间，单位是毫秒
     validationQuery: SELECT 1 FROM DUAL
     testWhileIdle: true
     testOnBorrow: false
     testOnReturn: false
     poolPreparedStatements: true
-    #   配置监控统计拦截的filters，去掉后监控界面sql无法统计，'wall'用于防火墙
-    filters: stat,wall
     maxPoolPreparedStatementPerConnectionSize: 20
-    useGlobalDataSourceStat: true
-    connectionProperties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=500
+    #配置监控统计拦截的filters，去掉后监控界面sql无法统计，'wall'用于防火墙
+    filters: stat,wall,log4j
+    #通过connectProperties属性来打开mergeSql功能；慢SQL记录
+    connectionProperties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=5000
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
 
 mybatis:
   mapperLocations: classpath:mapper/*.xml
-  configuration:
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  #configuration:
+    #log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 token:
-  base-url: https://login-dev.soundai.me:30443/sso/token
-  logout-url: http%3a%2f%2flocalhost%3a8090%2f
+  base-url: https://login-dev-int.soundai.cn/sso/token
+  logout-url: http%3A%2F%2Felevator-web.soundai.com
+  redirect-url: https://login-dev-int.soundai.cn/logout?redirect_url=http%3A%2F%2Felevator-web.soundai.com
   client_id: elevator
-  user-info-url: https://login-dev.soundai.me:30443/sso/user
+  user-info-url: https://login-dev-int.soundai.cn/sso/user
 
+material:
+  upload-url: https://cms-fat-azero.soundai.cn:8443/v1/cmsservice/resource/upload
 
+massage:
+  push-url: http://api-fat-inner-azero.soundai.cn/v1/push
+  type: PushProxy.devicedirective
+  namespace: TemplateRuntime
+  name: RenderTemplate
+  message-type: pushSourcesMessageTemplate
 
-
-
-
-
-
+azero:
+  bind-url: https://api-fat-azero.soundai.cn/v1/surrogate/users/device/bind
+  appId: 6cd32413fc6e79b7
+  secretKey: 207b9a7dd3643ba91e377b27366a9460
+  #productId: sai_elevator
+  productId: dianti
+  association: https://api-fat-azero.soundai.cn/v1/surrogate/users/association
 

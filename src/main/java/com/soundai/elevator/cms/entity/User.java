@@ -21,4 +21,6 @@ public class User {
 
     private  Long expireIn;
 
+    private  String userId;
+
 }

@@ -44,9 +44,9 @@ public class Swagger2Config {
 
     private ApiInfo apiInfo() {
         return new ApiInfoBuilder()
-                .title("Elevator API")
+                .title("Elevator CMS API")
                 .description("完善中。。。")
-                .termsOfServiceUrl("127.0.0.1")
+                .termsOfServiceUrl("72.16.89.190")
                 .version("1.0")
                 .build();
     }

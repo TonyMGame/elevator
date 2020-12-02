@@ -10,6 +10,15 @@ import lombok.Data;
 public class AccessToken {
 
     @ApiModelProperty(notes = "accessToken")
-    private  String  accessToken;
+    private String accessToken;
+
+    @ApiModelProperty(notes = "userId", hidden = true)
+    private Integer userId;
+
+    @ApiModelProperty(notes = "name", hidden = true)
+    private String name;
+
+    @ApiModelProperty(notes = "phone", hidden = true)
+    private String phone;
 
 }

@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.soundai.elevator.cms.mapper.MaterialMapper">
+
+    <resultMap id="BaseResultMap" type="com.soundai.elevator.cms.entity.Material">
+        <result column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="url" property="url"/>
+        <result column="material_id" property="materialId"/>
+        <result column="run_num" property="runNum"/>
+        <result column="update_user" property="updateUser"/>
+        <result column="updateUserName" property="updateUserName"/>
+        <result column="type" property="type"/>
+        <result column="is_used" property="isUsed"/>
+    </resultMap>
+
+
+    <select id="getMaterialList" resultMap="BaseResultMap" parameterType="com.soundai.elevator.cms.vo.MaterialPageVo">
+        select a.*,b.name as updateUserName from material a LEFT JOIN user b ON a.update_user = b.id
+        where 1=1
+        <if test="name !=null and name !=''">
+            AND a.name like CONCAT(CONCAT('%', #{name}), '%')
+        </if>
+        <if test="poster !=null and poster !=''">
+            AND poster like CONCAT(CONCAT('%', #{poster}), '%')
+        </if>
+        <if test="type !=null and type !='' ">
+            AND type = #{type}
+        </if>
+        <if test="userId !=null and userId !=''">
+            AND update_user= #{userId}
+        </if>
+        <if test="isUsed !=null and isUsed !=''">
+            AND is_used= #{isUsed}
+        </if>
+        order by a.id desc
+    </select>
+
+    <select id="selectMaterialByMd5" resultType="java.lang.Integer" parameterType="java.util.HashMap">
+        select count(1) from material where  1=1
+        and update_user = #{updateUser}
+        and md5 = #{md5}
+    </select>
+
+    <select id="materialDictionary" resultMap="BaseResultMap" parameterType="java.util.HashMap">
+        select id,name,url,type,update_user from material where 1=1
+        <if test="type !=null and type !=''">
+            AND type = #{type}
+        </if>
+        <if test="userId !=null and userId !=''">
+            AND update_user = #{userId}
+        </if>
+        order by id desc
+    </select>
+
+    <delete id="delMaterial" parameterType="java.lang.Integer">
+        delete from material where id =  #{id}
+    </delete>
+
+    <update id="updateMaterialUsed" parameterType="java.util.List">
+        update material set is_used=1
+        where id in
+        <foreach collection="list" item="id" index="index" open="(" close=")" separator=",">
+            #{id }
+        </foreach>
+    </update>
+
+
+    <update id="updatePoster" parameterType="com.soundai.elevator.cms.vo.UpdatePosterVo">
+        update material set poster=#{poster}
+        where id = #{id}
+    </update>
+
+    <insert id="insertMaterial" parameterType="com.soundai.elevator.cms.entity.Material">
+        INSERT INTO material
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="name!=null">
+                name,
+            </if>
+            <if test="url!=null">
+                url,
+            </if>
+            <if test="materialId!=null">
+                material_id,
+            </if>
+            <if test="isUsed!=null">
+                is_used,
+            </if>
+            <if test="runNum!=null">
+                run_num,
+            </if>
+            <if test="updateUser!=null">
+                update_user,
+            </if>
+            <if test="type!=null">
+                type,
+            </if>
+            <if test="md5!=null">
+                md5,
+            </if>
+            <if test="poster!=null">
+                poster,
+            </if>
+        </trim>
+        <trim prefix="values(" suffix=")" suffixOverrides=",">
+            <if test="name!=null">
+                #{name},
+            </if>
+            <if test="url!=null">
+                #{url},
+            </if>
+            <if test="materialId!=null">
+                #{materialId},
+            </if>
+            <if test="isUsed!=null">
+                #{isUsed},
+            </if>
+            <if test="runNum!=null">
+                #{runNum},
+            </if>
+            <if test="updateUser!=null">
+                #{updateUser},
+            </if>
+            <if test="type!=null">
+                #{type},
+            </if>
+            <if test="md5!=null">
+                #{md5},
+            </if>
+            <if test="poster!=null">
+                #{poster},
+            </if>
+        </trim>
+    </insert>
+
+</mapper>

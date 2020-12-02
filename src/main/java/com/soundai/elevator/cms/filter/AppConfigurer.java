@@ -18,7 +18,7 @@ public class AppConfigurer extends WebMvcConfigurerAdapter {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         InterceptorRegistration registration = registry.addInterceptor(getMyInterceptor()).addPathPatterns("/**");
-        registration.excludePathPatterns("/","/user/*","/swagger-ui")
+        registration.excludePathPatterns("/","/swagger-ui")
                 .excludePathPatterns("/swagger-resources/**", "/webjars/**", "/v2/**", "/swagger-ui.html/**");
         super.addInterceptors(registry);
     }

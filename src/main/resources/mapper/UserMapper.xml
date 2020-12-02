@@ -1,16 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-        <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.soundai.elevator.cms.mapper.UserMapper">
 
-    <resultMap id="BaseResultMap" type="com.soundai.elevator.cms.entity.User" >
-        <result column="id" property="id" />
-        <result column="name" property="name" />
-        <result column="company_name" property="companyName" />
-        <result column="account_id" property="accountId" />
-        <result column="number" property="number" />
-        <result column="del" property="isDel" />
-        <result column="level" property="level" />
+    <resultMap id="BaseResultMap" type="com.soundai.elevator.cms.entity.User">
+        <result column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="company_name" property="companyName"/>
+        <result column="account_id" property="accountId"/>
+        <result column="number" property="number"/>
+        <result column="del" property="isDel"/>
+        <result column="level" property="level"/>
+        <result column="password" property="password"/>
+        <result column="userId" property="userId"/>
     </resultMap>
 
     <select id="getUserById" resultMap="BaseResultMap" parameterType="java.lang.Integer">
@@ -23,7 +25,38 @@
         and number = #{number,jdbcType=VARCHAR} and account_id = #{accountId,jdbcType=VARCHAR}
     </select>
 
-    <insert id="insertUser" parameterType="com.soundai.elevator.cms.entity.User" useGeneratedKeys="true" keyProperty="id"  keyColumn="id">
+    <select id="getUserList" resultMap="BaseResultMap" parameterType="com.soundai.elevator.cms.vo.UserPageVo">
+        select * from user where 1=1
+        <if test="number !=null and number !=''">
+            AND number like CONCAT(CONCAT('%', #{number}), '%')
+        </if>
+        <if test="userId !=null and userId !=''">
+            AND id =#{userId}
+        </if>
+        order by id desc
+    </select>
+
+    <delete id="delUser" parameterType="java.lang.Integer">
+        delete from user where id =  #{id}
+    </delete>
+
+    <update id="upLevel" parameterType="com.soundai.elevator.cms.vo.ChangeValueVo">
+        update  user set level =#{item}
+        where id =#{id}
+    </update>
+
+    <update id="updateCompanyName" parameterType="com.soundai.elevator.cms.vo.ChangeValueVo">
+        update user set company_name =#{item}
+        where id =#{id}
+    </update>
+
+    <update id="updateName" parameterType="com.soundai.elevator.cms.vo.ChangeValueVo">
+        update user set name =#{item}
+        where id =#{id}
+    </update>
+
+    <insert id="insertUser" parameterType="com.soundai.elevator.cms.entity.User" useGeneratedKeys="true"
+            keyProperty="id" keyColumn="id">
         INSERT INTO user
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="name!=null">
@@ -34,6 +67,9 @@
             </if>
             <if test="accountId!=null">
                 account_id,
+            </if>
+            <if test="userId!=null">
+                userId,
             </if>
             <if test="number!=null">
                 number,
@@ -54,6 +90,9 @@
             </if>
             <if test="accountId!=null">
                 #{accountId},
+            </if>
+            <if test="userId!=null">
+                #{userId},
             </if>
             <if test="number!=null">
                 #{number},

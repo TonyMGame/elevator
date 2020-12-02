@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.soundai.elevator.cms.mapper.EquipmentMapper">
+
+    <resultMap id="BaseResultMap" type="com.soundai.elevator.cms.entity.Equipment">
+        <result column="id" property="id"/>
+        <result column="equipment_id" property="deviceId"/>
+        <result column="elevator" property="elevator"/>
+        <result column="location" property="location"/>
+        <result column="group" property="group"/>
+    </resultMap>
+
+    <select id="getEquipmentList" resultMap="BaseResultMap" parameterType="com.soundai.elevator.cms.vo.EquipmentPageVo">
+        select * from equipment where 1=1
+        <if test="userId !=null and userId !=''">
+            and update_user= #{userId}
+        </if>
+        order by id desc
+    </select>
+
+    <select id="getEquipmentListByLocation" resultMap="BaseResultMap" parameterType="com.soundai.elevator.cms.entity.EquipmentListByLocation">
+        select * from equipment where 1=1
+        <if test="userId !=null ">
+            and update_user = #{userId}
+        </if>
+        <if test="location !=null and location !=''">
+            and location IN
+            <foreach collection="location" item="id" index="index" open="(" close=")" separator=",">
+                #{id}
+            </foreach>
+        </if>
+        order by id desc
+    </select>
+
+    <select id="getDefEquipmentListByLocation" resultMap="BaseResultMap" parameterType="com.soundai.elevator.cms.entity.EquipmentListByLocation">
+        select * from equipment where 1=1
+        <if test="userId !=null and userId !=''">
+            and update_user = #{userId}
+        </if>
+        and equipment_id not in
+        (SELECT device_id FROM push_task_default )
+        <if test="location !=null and location !=''">
+            and location IN
+            <foreach collection="location" item="id" index="index" open="(" close=")" separator=",">
+                #{id}
+            </foreach>
+        </if>
+        order by id desc
+    </select>
+
+
+    <delete id="delEquipment" parameterType="java.lang.Integer">
+        delete from equipment where id =  #{id}
+    </delete>
+
+    <select id="getEquipmentLocationList" resultType="java.lang.String" parameterType="java.lang.String">
+        SELECT DISTINCT(location) from  equipment
+        where 1=1
+        <if test="userId !=null and userId !=''">
+            and update_user= #{userId}
+        </if>
+    </select>
+
+    <select id="getEquipmentListByIds" resultMap="BaseResultMap">
+        select * from equipment
+        where 1=1 and id in
+        <foreach collection="array" item="id" index="index" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+        order by id desc
+    </select>
+
+    <select id="getEquipmentBySn" resultType="java.lang.Integer" parameterType="java.lang.String">
+        select count(1) from  equipment
+        where 1=1 and device_sn = #{sn}
+    </select>
+
+    <select id="getEquipment" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        select * from equipment where 1=1 and  id=#{id}
+    </select>
+
+    <insert id="insertEquipment" parameterType="com.soundai.elevator.cms.entity.Equipment">
+        INSERT INTO equipment
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="equipmentId!=null">
+                equipment_id,
+            </if>
+            <if test="deviceSN!=null">
+                device_sn,
+            </if>
+            <if test="elevator!=null">
+                elevator,
+            </if>
+            <if test="location!=null">
+                location,
+            </if>
+            <if test="userId!=null">
+                update_user,
+            </if>
+        </trim>
+        <trim prefix="values(" suffix=")" suffixOverrides=",">
+            <if test="equipmentId!=null">
+                #{equipmentId},
+            </if>
+            <if test="deviceSN!=null">
+                #{deviceSN},
+            </if>
+            <if test="elevator!=null">
+                #{elevator},
+            </if>
+            <if test="location!=null">
+                #{location},
+            </if>
+            <if test="userId!=null">
+                #{userId},
+            </if>
+        </trim>
+    </insert>
+
+</mapper>
